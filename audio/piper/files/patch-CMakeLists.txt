@@ -1,139 +1,97 @@
---- CMakeLists.txt.orig	2023-11-14 17:55:22 UTC
+--- CMakeLists.txt.orig	2025-08-31 13:55:22 UTC
 +++ CMakeLists.txt
-@@ -13,7 +13,7 @@ if(MSVC)
-   add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
- elseif(NOT APPLE)
-   # Linux flags
--  string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wl,-rpath,'$ORIGIN'")
-+  string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra")
-   string(APPEND CMAKE_C_FLAGS " -Wall -Wextra")
- endif()
+@@ -4,49 +4,9 @@ project(piper LANGUAGES C CXX)
+ cmake_minimum_required(VERSION 3.26)
+ project(piper LANGUAGES C CXX)
  
-@@ -25,7 +25,7 @@ add_executable(test_piper src/cpp/test.cpp src/cpp/piper.cpp)
- 
- # ---- fmt ---
- 
--if(NOT DEFINED FMT_DIR)
-+if(FALSE)
-   set(FMT_VERSION "10.0.0")
-   set(FMT_DIR "${CMAKE_CURRENT_BINARY_DIR}/fi")
- 
-@@ -43,7 +43,7 @@ endif()
- 
- # ---- spdlog ---
- 
--if(NOT DEFINED SPDLOG_DIR)
-+if(FALSE)
-   set(SPDLOG_DIR "${CMAKE_CURRENT_BINARY_DIR}/si")
-   set(SPDLOG_VERSION "1.12.0")
-   ExternalProject_Add(
-@@ -58,7 +58,13 @@ endif()
- 
- # ---- piper-phonemize ---
- 
--if(NOT DEFINED PIPER_PHONEMIZE_DIR)
-+find_package(PkgConfig)
-+pkg_check_modules(FMT REQUIRED fmt)
-+pkg_check_modules(ONNXRUNTIME REQUIRED libonnxruntime)
-+pkg_check_modules(PIPER_PHONEMIZE REQUIRED piper_phonemize)
-+pkg_check_modules(SPDLOG REQUIRED spdlog)
-+
-+if(FALSE)
-   set(PIPER_PHONEMIZE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pi")
-   ExternalProject_Add(
-     piper_phonemize_external
-@@ -74,9 +80,8 @@ endif()
- 
- if((NOT MSVC) AND (NOT APPLE))
-   # Linux flags
--  string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wl,-rpath,'$ORIGIN'")
-+  string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra")
-   string(APPEND CMAKE_C_FLAGS " -Wall -Wextra")
--  target_link_libraries(piper -static-libgcc -static-libstdc++)
- 
-   set(PIPER_EXTRA_LIBRARIES "pthread")
- endif()
-@@ -91,18 +96,18 @@ target_link_libraries(piper
- )
- 
- target_link_directories(piper PUBLIC
--  ${FMT_DIR}/lib
--  ${SPDLOG_DIR}/lib
--  ${PIPER_PHONEMIZE_DIR}/lib
-+  ${FMT_LIBRARY_DIRS}
-+  ${SPDLOG_LIBRARY_DIRS}
-+  ${ONNXRUNTIME_LIBRARY_DIRS}
- )
- 
- target_include_directories(piper PUBLIC
--  ${FMT_DIR}/include
--  ${SPDLOG_DIR}/include
--  ${PIPER_PHONEMIZE_DIR}/include
-+  ${FMT_INCLUDE_DIRS}
-+  ${SPDLOG_INCLUDE_DIRS}
-+  ${ONNXRUNTIME_INCLUDE_DIRS}
- )
- 
--target_compile_definitions(piper PUBLIC _PIPER_VERSION=${piper_version})
-+target_compile_definitions(piper PUBLIC _PIPER_VERSION="${piper_version}")
- 
- # ---- Declare test ----
- include(CTest)
-@@ -116,16 +121,16 @@ target_compile_features(test_piper PUBLIC cxx_std_17)
- 
- target_include_directories(
-   test_piper PUBLIC
--  ${FMT_DIR}/include
--  ${SPDLOG_DIR}/include
--  ${PIPER_PHONEMIZE_DIR}/include
-+  ${FMT_INCLUDE_DIRS}
-+  ${SPDLOG_INCLUDE_DIRS}
-+  ${ONNXRUNTIME_INCLUDE_DIRS}
- )
- 
- target_link_directories(
-   test_piper PUBLIC
--  ${FMT_DIR}/lib
--  ${SPDLOG_DIR}/lib
--  ${PIPER_PHONEMIZE_DIR}/lib
-+  ${FMT_LIBRARY_DIRS}
-+  ${SPDLOG_LIBRARY_DIRS}
-+  ${ONNXRUNTIME_LIBRARY_DIRS}
- )
- 
- target_link_libraries(test_piper PUBLIC
-@@ -140,33 +145,5 @@ target_link_libraries(test_piper PUBLIC
- 
- install(
-   TARGETS piper
--  DESTINATION ${CMAKE_INSTALL_PREFIX})
+-include(ExternalProject)
 -
--# Dependencies
--install(
--  DIRECTORY ${PIPER_PHONEMIZE_DIR}/bin/
--  DESTINATION ${CMAKE_INSTALL_PREFIX}
--  USE_SOURCE_PERMISSIONS  # keep +x
--  FILES_MATCHING
--  PATTERN "piper_phonemize"
--  PATTERN "espeak-ng"
--  PATTERN "*.dll"
+ # scikit-build-core will forward Python_* variables
+ find_package(Python COMPONENTS Development.Module Development.SABIModule REQUIRED)
+ 
+-# Install location for espeak-ng
+-set(ESPEAKNG_BUILD_DIR ${CMAKE_BINARY_DIR}/espeak_ng)
+-set(ESPEAKNG_INSTALL_DIR ${CMAKE_BINARY_DIR}/espeak_ng-install)
+-
+-if(WIN32)
+-    # Special handling for Windows
+-    set(ESPEAKNG_STATIC_LIB ${ESPEAKNG_INSTALL_DIR}/lib/espeak-ng.lib)
+-    set(UCD_STATIC_LIB ${ESPEAKNG_BUILD_DIR}/src/espeak_ng_external-build/src/ucd-tools/ucd.lib)
+-else()
+-    set(ESPEAKNG_STATIC_LIB ${ESPEAKNG_INSTALL_DIR}/lib/libespeak-ng.a)
+-    set(UCD_STATIC_LIB ${ESPEAKNG_BUILD_DIR}/src/espeak_ng_external-build/src/ucd-tools/libucd.a)
+-endif()
+-
+-ExternalProject_Add(espeak_ng_external
+-    GIT_REPOSITORY https://github.com/espeak-ng/espeak-ng.git
+-    GIT_TAG 212928b394a96e8fd2096616bfd54e17845c48f6  # 2025-Mar-22
+-    PREFIX ${ESPEAKNG_BUILD_DIR}
+-    CMAKE_ARGS
+-        -DCMAKE_INSTALL_PREFIX=${ESPEAKNG_INSTALL_DIR}
+-        -DBUILD_SHARED_LIBS:BOOL=OFF
+-        -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
+-        -DUSE_ASYNC:BOOL=OFF
+-        -DUSE_MBROLA:BOOL=OFF
+-        -DUSE_LIBSONIC:BOOL=OFF
+-        -DUSE_LIBPCAUDIO:BOOL=OFF
+-        -DUSE_KLATT:BOOL=OFF
+-        -DUSE_SPEECHPLAYER:BOOL=OFF
+-        -DEXTRA_cmn:BOOL=ON
+-        -DEXTRA_ru:BOOL=ON
+-        # Need to explicitly add ucd include directory for CI
+-        "-DCMAKE_C_FLAGS=-D_FILE_OFFSET_BITS=64 -I${ESPEAKNG_BUILD_DIR}/src/espeak_ng_external/src/ucd-tools/src/include"
+-        "-DCMAKE_CXX_FLAGS=-D_FILE_OFFSET_BITS=64 -I${ESPEAKNG_BUILD_DIR}/src/espeak_ng_external/src/ucd-tools/src/include"
+-    BUILD_BYPRODUCTS
+-        ${ESPEAKNG_STATIC_LIB}
+-        ${UCD_STATIC_LIB}
+-    UPDATE_DISCONNECTED TRUE
 -)
 -
--install(
--  DIRECTORY ${PIPER_PHONEMIZE_DIR}/lib/
--  DESTINATION ${CMAKE_INSTALL_PREFIX}
--  FILES_MATCHING
--  PATTERN "*.dll"
--  PATTERN "*.so*"
+ include_directories(
+     ${ESPEAKNG_INSTALL_DIR}/include
+ )
+@@ -56,42 +16,16 @@ add_library(espeakbridge MODULE
+     src/piper/espeakbridge.c
+ )
+ 
+-add_dependencies(espeakbridge espeak_ng_external)
+ target_link_libraries(espeakbridge
+-    ${ESPEAKNG_STATIC_LIB}
+-    ${UCD_STATIC_LIB}
++    ${ESPEAKNG_NG_DIR}
++    ${UCD_DIR}
+     Python::SABIModule
+ )
+ target_include_directories(espeakbridge PRIVATE
+     ${ESPEAKNG_INSTALL_DIR}/include
+ )
+ 
+-if(WIN32)
+-    # Fix dll thunk issue (__imp_SYMBOL not found)
+-    target_compile_definitions(espeakbridge PRIVATE LIBESPEAK_NG_EXPORT)
+-
+-    # Fix .dll suffix
+-    set_target_properties(espeakbridge PROPERTIES
+-        PREFIX ""
+-        SUFFIX ".pyd"
+-    )
+-else()
+-    set_target_properties(espeakbridge PROPERTIES
+-        PREFIX ""
+-    )
+-endif()
+-
+ install(TARGETS espeakbridge
+     LIBRARY DESTINATION .
+     RUNTIME DESTINATION .
 -)
 -
--install(
--  DIRECTORY ${PIPER_PHONEMIZE_DIR}/share/espeak-ng-data
--  DESTINATION ${CMAKE_INSTALL_PREFIX}
--)
+-# Copy espeak-ng-data
+-set(DATA_SRC ${CMAKE_BINARY_DIR}/espeak_ng-install/share/espeak-ng-data)
+-set(DATA_DST ${CMAKE_CURRENT_SOURCE_DIR}/src/piper/espeak-ng-data)
 -
--install(
--  FILES ${PIPER_PHONEMIZE_DIR}/share/libtashkeel_model.ort
--  DESTINATION ${CMAKE_INSTALL_PREFIX}
-+  DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+-add_custom_target(copy_espeak_ng_data ALL
+-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${DATA_SRC} ${DATA_DST}
+-    DEPENDS espeak_ng_external
+-    COMMENT "Copying espeak-ng-data after espeak-ng external project builds"
  )
