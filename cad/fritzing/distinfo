@@ -1,5 +1,5 @@
-TIMESTAMP = 1585740674
-SHA256 (fritzing-fritzing-app-0.9.2b_GH0.tar.gz) = cd9f5709b8481639ff8649d516d34cb18a096efa3981e3d20f3cc9d6c9953c97
-SIZE (fritzing-fritzing-app-0.9.2b_GH0.tar.gz) = 10913494
-SHA256 (fritzing-fritzing-parts-0.9.2b_GH0.tar.gz) = 5f5f5e26bfc33911f57b1620912fdf0a834c50d196b930ef70e784f3a447194b
-SIZE (fritzing-fritzing-parts-0.9.2b_GH0.tar.gz) = 15924206
+TIMESTAMP = 1760259091
+SHA256 (fritzing-fritzing-app-1.0.6.g20250402-b9add9eaa7c426963de20c8514a69d3f15e83bdf_GH0.tar.gz) = 62f003614ab66b8c76456a9e69a5c2eadf41eff732eb77c49fc6ff626e2102ae
+SIZE (fritzing-fritzing-app-1.0.6.g20250402-b9add9eaa7c426963de20c8514a69d3f15e83bdf_GH0.tar.gz) = 11050422
+SHA256 (fritzing-fritzing-parts-1513f04aa3d553d1877e5fb8b84e77d895c77d62_GH0.tar.gz) = f6a649d51c1df3565da7f16a7a08dfcbeb352067d98253aff08274034ff3be98
+SIZE (fritzing-fritzing-parts-1513f04aa3d553d1877e5fb8b84e77d895c77d62_GH0.tar.gz) = 18292250
