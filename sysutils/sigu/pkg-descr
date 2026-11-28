@@ -1,0 +1,5 @@
+SIGU stands for the System Information Graphical Utility. It is similar to
+neofetch or fastfetch, but designed for graphical environments.
+
+The dialog box window that displays this information can be customized in its
+appearance and behavior using various environment variables.
