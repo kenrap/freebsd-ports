@@ -1,6 +1,6 @@
 PORTNAME=	sdl3-imgui-filedialogs
 DISTVERSIONPREFIX=	v
-DISTVERSION=	1.0.0.0
+DISTVERSION=	1.0.0.3
 CATEGORIES=	devel
 
 MAINTAINER=	josephvenable@verizon.net
@@ -10,17 +10,16 @@ WWW=		https://github.com/samuelvenable/SDL3-ImGui-FileDialogs
 LICENSE=	MIT
 LICENSE_FILE=	${WRKSRC}/LICENSE.txt
 
-USES=		cmake compiler:c++20-lang pkgconfig sdl
+LIB_DEPENDS=	libfontconfig.so:x11-fonts/fontconfig
+
+USES=		cmake compiler:c++20-lang pkgconfig sdl xorg
 
 USE_GITHUB=	yes
 GH_ACCOUNT=	samuelvenable
 GH_PROJECT=	SDL3-ImGui-FileDialogs
 
 USE_SDL=	sdl3
-
-CMAKE_ARGS=	-DIFD_USE_BASIC_ICONS=ON \
-		-DIFD_USE_BUILD_ALL=ON \
-		-DIFD_USE_INSTALL_ALL=ON
+USE_XORG=	x11
 
 post-install:
 	${RM} ${STAGEDIR}${PREFIX}/include/*.hpp
